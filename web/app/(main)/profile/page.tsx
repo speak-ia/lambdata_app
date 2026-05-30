@@ -6,6 +6,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AppHeader } from "@/components/layout/app-header";
 import { useAuthStore } from "@/store/auth-store";
+import { signOutFirebase } from "@/lib/firebase/auth";
+import { isFirebaseConfigured } from "@/lib/firebase/config";
 import { AFRICAN_COUNTRIES, AFRICAN_LANGUAGES } from "@/lib/constants";
 import { LogOut, Moon, Sun } from "lucide-react";
 import { useAppStore } from "@/store/app-store";
@@ -68,7 +70,14 @@ export default function ProfilePage() {
       <Button
         variant="destructive"
         className="h-12"
-        onClick={() => {
+        onClick={async () => {
+          if (isFirebaseConfigured() && !user?.isGuest) {
+            try {
+              await signOutFirebase();
+            } catch {
+              /* ignore */
+            }
+          }
           logout();
           router.replace("/login");
         }}

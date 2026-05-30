@@ -10,23 +10,14 @@ import { Label } from "@/components/ui/label";
 import { LambdataLogo } from "@/components/branding/lambdata-logo";
 import { useAuthStore } from "@/store/auth-store";
 import { APP_TAGLINE } from "@/lib/constants";
-import type { UserProfile } from "@/types";
-
-const DEMO_USER: UserProfile = {
-  id: "demo-1",
-  email: "demo@lambdata.africa",
-  displayName: "Aminata Diallo",
-  country: "SN",
-  languages: ["fr", "wo"],
-  level: 12,
-  xp: 5200,
-  xpToNextLevel: 10000,
-  agreements: 1240,
-  contributions: 890,
-  badges: [],
-  streak: 7,
-  isGuest: false,
-};
+import { isFirebaseConfigured } from "@/lib/firebase/config";
+import {
+  getAuthErrorMessage,
+  registerWithEmail,
+  signInWithEmail,
+  signInWithGoogle,
+  signOutFirebase,
+} from "@/lib/firebase/auth";
 
 interface AuthFormProps {
   mode: "login" | "register";
@@ -40,28 +31,67 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
 
+  const firebaseReady = isFirebaseConfigured();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!firebaseReady) {
+      toast.error("Firebase non configuré (.env.local)");
+      return;
+    }
+    if (!email.trim() || !password) {
+      toast.error("Renseignez l'e-mail et le mot de passe");
+      return;
+    }
+    if (mode === "register" && !name.trim()) {
+      toast.error("Choisissez un pseudo");
+      return;
+    }
+
     setLoading(true);
     try {
-      // TODO: brancher sur API NestJS
-      await new Promise((r) => setTimeout(r, 600));
-      setUser({
-        ...DEMO_USER,
-        displayName: name || DEMO_USER.displayName,
-        email: email || DEMO_USER.email,
-      });
-      setTokens("demo-token", "demo-refresh");
+      const result =
+        mode === "login"
+          ? await signInWithEmail(email, password)
+          : await registerWithEmail(email, password, name);
+      setUser(result.user);
+      setTokens(result.token);
       toast.success(mode === "login" ? "Connexion réussie" : "Compte créé");
       router.push("/home");
-    } catch {
-      toast.error("Erreur de connexion");
+    } catch (error) {
+      toast.error(getAuthErrorMessage(error));
     } finally {
       setLoading(false);
     }
   };
 
-  const handleGuest = () => {
+  const handleGoogle = async () => {
+    if (!firebaseReady) {
+      toast.error("Firebase non configuré (.env.local)");
+      return;
+    }
+    setLoading(true);
+    try {
+      const result = await signInWithGoogle();
+      setUser(result.user);
+      setTokens(result.token);
+      toast.success("Connexion Google réussie");
+      router.push("/home");
+    } catch (error) {
+      toast.error(getAuthErrorMessage(error));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGuest = async () => {
+    if (firebaseReady) {
+      try {
+        await signOutFirebase();
+      } catch {
+        /* session déjà vide */
+      }
+    }
     loginAsGuest();
     toast.info("Mode invité activé");
     router.push("/home");
@@ -73,6 +103,14 @@ export function AuthForm({ mode }: AuthFormProps) {
         <LambdataLogo size="splash" priority />
         <p className="max-w-xs text-sm text-muted-foreground">{APP_TAGLINE}</p>
       </div>
+
+      {!firebaseReady && (
+        <p className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-center text-sm text-destructive">
+          Variables Firebase manquantes. Copiez{" "}
+          <code className="text-xs">.env.example</code> vers{" "}
+          <code className="text-xs">.env.local</code>.
+        </p>
+      )}
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         {mode === "register" && (
@@ -89,10 +127,10 @@ export function AuthForm({ mode }: AuthFormProps) {
           </div>
         )}
         <div className="flex flex-col gap-2">
-          <Label htmlFor="email">Email ou téléphone</Label>
+          <Label htmlFor="email">Adresse e-mail</Label>
           <Input
             id="email"
-            type="text"
+            type="email"
             placeholder="email@exemple.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -111,13 +149,14 @@ export function AuthForm({ mode }: AuthFormProps) {
               mode === "login" ? "current-password" : "new-password"
             }
             className="h-12 text-base"
+            minLength={6}
           />
         </div>
         <Button
           type="submit"
           size="lg"
           className="mt-2 h-12 w-full text-base font-semibold"
-          disabled={isLoading}
+          disabled={isLoading || !firebaseReady}
         >
           {isLoading
             ? "Chargement…"
@@ -127,30 +166,29 @@ export function AuthForm({ mode }: AuthFormProps) {
         </Button>
       </form>
 
+      <div className="relative flex items-center gap-3 py-1">
+        <div className="h-px flex-1 bg-border" />
+        <span className="text-xs text-muted-foreground">ou</span>
+        <div className="h-px flex-1 bg-border" />
+      </div>
+
       <div className="flex flex-col gap-3">
         <Button
           type="button"
           variant="outline"
           size="lg"
           className="h-12 w-full"
-          onClick={() => toast.info("Google OAuth — à connecter")}
+          disabled={isLoading || !firebaseReady}
+          onClick={handleGoogle}
         >
           Continuer avec Google
-        </Button>
-        <Button
-          type="button"
-          variant="secondary"
-          size="lg"
-          className="h-12 w-full"
-          onClick={() => toast.info("OTP SMS — à connecter")}
-        >
-          Connexion par SMS (OTP)
         </Button>
         <Button
           type="button"
           variant="ghost"
           size="lg"
           className="h-12 w-full text-muted-foreground"
+          disabled={isLoading}
           onClick={handleGuest}
         >
           Continuer en invité

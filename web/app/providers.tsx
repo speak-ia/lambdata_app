@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { useOnlineStatus } from "@/hooks/use-online-status";
 import { useTheme } from "@/hooks/use-theme";
 import { PwaRegister } from "@/pwa/register";
+import { FirebaseAuthSync } from "@/components/auth/firebase-auth-sync";
 
 function AppEffects() {
   useOnlineStatus();
@@ -30,6 +31,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <AppEffects />
+      <FirebaseAuthSync />
       <PwaRegister />
       {children}
       <Toaster position="top-center" richColors closeButton />

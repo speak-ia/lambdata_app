@@ -12,13 +12,18 @@ export async function syncPendingUploads(token?: string | null) {
   for (const item of pending) {
     try {
       await offlineDb.uploads.update(item.id, { status: "uploading" });
+      const itemToken =
+        typeof item.payload.token === "string" ? item.payload.token : token;
       const res = await fetch(`${API_URL}/api/v1/contributions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...(itemToken ? { Authorization: `Bearer ${itemToken}` } : {}),
         },
-        body: JSON.stringify(item.payload),
+        body: JSON.stringify({
+          type: item.module.toUpperCase(),
+          metadata: item.payload,
+        }),
       });
       if (!res.ok) throw new Error("Upload failed");
       await offlineDb.uploads.update(item.id, { status: "done" });

@@ -8,6 +8,7 @@ import { TaskShell } from "@/components/tasks/task-shell";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { queueUpload } from "@/offline/db";
+import { useAuthStore } from "@/store/auth-store";
 
 const PHRASES = [
   "Les pluies du Sahel nourrissent nos récoltes.",
@@ -16,6 +17,7 @@ const PHRASES = [
 ];
 
 export default function AudioTaskPage() {
+  const accessToken = useAuthStore((s) => s.accessToken);
   const [index, setIndex] = useState(0);
   const [recording, setRecording] = useState(false);
   const [blob, setBlob] = useState<Blob | null>(null);
@@ -55,7 +57,12 @@ export default function AudioTaskPage() {
     }
     await queueUpload({
       module: "audio",
-      payload: { phrase, size: blob.size, type: blob.type },
+      payload: {
+        phrase,
+        size: blob.size,
+        type: blob.type,
+        token: accessToken ?? undefined,
+      },
     });
     toast.success("Enregistrement sauvegardé (sync auto)");
     setBlob(null);

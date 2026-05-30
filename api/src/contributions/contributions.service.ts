@@ -8,10 +8,10 @@ import { ContributionType } from "@prisma/client";
 export class ContributionsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(dto: CreateContributionDto) {
+  async create(dto: CreateContributionDto, firebaseUid?: string) {
     return this.prisma.contribution.create({
       data: {
-        userId: dto.userId ?? "system",
+        userId: firebaseUid ?? dto.userId ?? "system",
         type: dto.type as ContributionType,
         metadata: (dto.metadata ?? {}) as Prisma.InputJsonValue,
         xpEarned: dto.xpEarned ?? 10,

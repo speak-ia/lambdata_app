@@ -1,7 +1,9 @@
-import { Body, Controller, Get, Post, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Post, Req, UseGuards } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { ContributionsService } from "./contributions.service";
 import { CreateContributionDto } from "./dto/create-contribution.dto";
+import { FirebaseAuthGuard } from "../firebase/firebase-auth.guard";
+import type { AuthenticatedRequest } from "../firebase/firebase-auth.guard";
 
 @ApiTags("contributions")
 @Controller("contributions")
@@ -14,8 +16,12 @@ export class ContributionsController {
   }
 
   @Post()
+  @UseGuards(FirebaseAuthGuard)
   @ApiBearerAuth()
-  create(@Body() dto: CreateContributionDto) {
-    return this.contributionsService.create(dto);
+  create(
+    @Body() dto: CreateContributionDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.contributionsService.create(dto, req.firebaseUid);
   }
 }

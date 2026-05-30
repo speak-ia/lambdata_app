@@ -1,4 +1,4 @@
-export type AuthMode = "login" | "register" | "otp" | "guest";
+export type AuthMode = "login" | "register" | "guest";
 
 export type ContributionModule =
   | "audio"

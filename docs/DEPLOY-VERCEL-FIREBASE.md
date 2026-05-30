@@ -56,7 +56,7 @@ npx vercel env pull web/.env.local
 ## 3. Firebase
 
 1. [console.firebase.google.com](https://console.firebase.google.com) → créer projet **Lambdata**.
-2. Activer **Authentication** : Google, Email, Phone (OTP).
+2. Activer **Authentication** : Email, Google (Phone activé côté Firebase pour plus tard — pas d’OTP SMS dans l’UI pour l’instant).
 3. Activer **Storage** (bucket GCS lié).
 4. Ajouter une app **Web** → copier la config dans les variables Vercel ci-dessus.
 5. **Authorized domains** : ajouter `localhost`, votre domaine Vercel, et le domaine custom futur.
@@ -73,9 +73,17 @@ firebase init emulators
 - `CORS_ORIGIN` : URL Vercel production + previews (`https://*.vercel.app` si besoin).
 - Vérification des tokens : **Firebase Admin SDK** dans NestJS.
 
-## 5. Prochaines implémentations code
+## 5. Implémentations code
 
-- [ ] SDK Firebase Auth dans `web/`
-- [ ] Guard Firebase Admin dans `api/`
-- [ ] Upload GCS / Firebase Storage
+- [x] SDK Firebase Auth dans `web/` (e-mail, Google, invité)
+- [x] Guard Firebase Admin dans `api/` (`FIREBASE_AUTH_OPTIONAL=true` en dev sans clé service)
+- [ ] Upload GCS / Firebase Storage (prochaine étape)
 - [ ] Retirer MinIO en prod (garder docker-compose pour dev local)
+
+### API — clé de compte de service (production)
+
+1. Firebase Console → **Paramètres** → **Comptes de service** → **Générer une nouvelle clé privée**
+2. Ne jamais committer le fichier JSON
+3. Local : `FIREBASE_SERVICE_ACCOUNT_PATH=./chemin/vers/clé.json` dans `api/.env`
+4. Vercel / Cloud Run : variable `FIREBASE_SERVICE_ACCOUNT_JSON` (contenu JSON sur une ligne)
+5. Mettre `FIREBASE_AUTH_OPTIONAL=false` en production

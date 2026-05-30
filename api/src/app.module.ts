@@ -4,10 +4,12 @@ import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { PrismaModule } from "./prisma/prisma.module";
 import { ContributionsModule } from "./contributions/contributions.module";
+import { FirebaseModule } from "./firebase/firebase.module";
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    FirebaseModule,
     PrismaModule,
     ContributionsModule,
   ],
