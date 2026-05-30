@@ -1,0 +1,29 @@
+{
+  "name": "lambdata",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Infrastructure africaine souveraine de collecte de données IA",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:web\" \"npm run dev:api\"",
+    "dev:web": "npm run dev --prefix web",
+    "dev:api": "npm run start:dev --prefix api",
+    "build": "npm run build --prefix web && npm run build --prefix api",
+    "db:generate": "npm run prisma:generate --prefix api",
+    "db:migrate": "npm run prisma:migrate --prefix api",
+    "db:studio": "npm run prisma:studio --prefix api",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "mobile:urls": "node -e \"const ip=process.env.LAN_IP||'192.168.1.3'; console.log('\\n📱 Sur votre téléphone, ouvrez:\\n   http://'+ip+':3000\\n   http://'+ip+':3000/mobile (aide)\\n\\n🔌 API mobile:\\n   http://'+ip+':3001/api/v1\\n')\"",
+    "android:sync": "cd web && CAPACITOR_SERVER_URL=${CAPACITOR_SERVER_URL:-http://192.168.1.3:3000} npx cap sync",
+    "android:open": "npm run android:sync && npm run cap:android --prefix web",
+    "android:run": "npm run android:sync && npm run cap:run:android --prefix web",
+    "ios:sync": "cd web && CAPACITOR_SERVER_URL=${CAPACITOR_SERVER_URL:-http://192.168.1.3:3000} npx cap sync ios",
+    "ios:open": "npm run ios:sync && npm run cap:ios --prefix web",
+    "ios:run": "npm run ios:sync && npm run cap:run:ios --prefix web",
+    "db:setup": "npm run docker:up && sleep 3 && npm run db:migrate",
+    "setup": "npm install && npm install --prefix web && npm install --prefix api && npm run db:setup"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

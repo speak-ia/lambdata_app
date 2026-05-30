@@ -1,0 +1,211 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ContributionType {
+  AUDIO
+  IMAGE
+  VIDEO
+  TEXT
+  TRANSLATION
+  VALIDATION
+}
+
+enum ContributionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  FLAGGED
+}
+
+enum ReviewVote {
+  YES
+  NO
+  SKIP
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String?  @unique
+  phone         String?  @unique
+  passwordHash  String?
+  displayName   String
+  avatarUrl     String?
+  country       String   @default("SN")
+  languages     String[] @default([])
+  level         Int      @default(1)
+  xp            Int      @default(0)
+  agreements    Int      @default(0)
+  contributions Int      @default(0)
+  streak        Int      @default(0)
+  isGuest       Boolean  @default(false)
+  googleId      String?  @unique
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  contributionRecords Contribution[]
+  audioItems    AudioContribution[]
+  imageItems    ImageContribution[]
+  translations  Translation[]
+  reviews       Review[]
+  userBadges    UserBadge[]
+  rewards       Reward[]
+  refreshTokens RefreshToken[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+model Contribution {
+  id        String             @id @default(cuid())
+  userId    String
+  type      ContributionType
+  status    ContributionStatus @default(PENDING)
+  xpEarned  Int                @default(0)
+  metadata  Json?
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  user      User               @relation(fields: [userId], references: [id])
+
+  @@index([userId, type])
+  @@map("contributions")
+}
+
+model AudioContribution {
+  id           String   @id @default(cuid())
+  userId       String
+  phrase       String
+  language     String
+  audioUrl     String
+  durationMs   Int?
+  qualityScore Float?
+  noiseLevel   Float?
+  format       String   @default("webm")
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id])
+
+  @@map("audio_contributions")
+}
+
+model ImageContribution {
+  id        String   @id @default(cuid())
+  userId    String
+  imageUrl  String
+  category  String
+  tags      String[] @default([])
+  width     Int?
+  height    Int?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("image_contributions")
+}
+
+model Translation {
+  id           String   @id @default(cuid())
+  userId       String
+  sourceText   String
+  sourceLang   String   @default("fr")
+  targetLang   String
+  translatedText String
+  upvotes      Int      @default(0)
+  downvotes    Int      @default(0)
+  confidence   Float    @default(0)
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id])
+
+  @@map("translations")
+}
+
+model Review {
+  id             String     @id @default(cuid())
+  userId         String
+  targetType     ContributionType
+  targetId       String
+  vote           ReviewVote
+  confidence     Float      @default(1)
+  createdAt      DateTime   @default(now())
+  user           User       @relation(fields: [userId], references: [id])
+
+  @@index([targetType, targetId])
+  @@map("reviews")
+}
+
+model Badge {
+  id          String      @id @default(cuid())
+  slug        String      @unique
+  name        String
+  description String?
+  icon        String
+  xpRequired  Int         @default(0)
+  userBadges  UserBadge[]
+
+  @@map("badges")
+}
+
+model UserBadge {
+  id        String   @id @default(cuid())
+  userId    String
+  badgeId   String
+  level     Int      @default(1)
+  earnedAt  DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  badge     Badge    @relation(fields: [badgeId], references: [id])
+
+  @@unique([userId, badgeId])
+  @@map("user_badges")
+}
+
+model Mission {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  description String
+  xpReward    Int
+  targetCount Int      @default(1)
+  module      ContributionType?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@map("missions")
+}
+
+model Reward {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  amount    Float
+  currency  String   @default("XOF")
+  status    String   @default("pending")
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("rewards")
+}
+
+model LeaderboardEntry {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  category  String
+  points    Int      @default(0)
+  rank      Int?
+  updatedAt DateTime @updatedAt
+
+  @@index([category, points])
+  @@map("leaderboard_entries")
+}
