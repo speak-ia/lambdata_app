@@ -46,6 +46,20 @@ git push -u origin main
 
 5. Deploy → URL preview du type `lambdata-app-xxx.vercel.app`
 
+### Déploiement bloqué (Hobby + `Co-authored-by: Cursor`)
+
+Sur le plan **Hobby**, Vercel refuse les commits avec un co-auteur externe (`cursoragent@cursor.com`).
+
+**Solutions :**
+
+1. **Depuis votre terminal** (pas via l’agent) :
+   ```bash
+   git commit --allow-empty -m "chore: trigger Vercel production deploy"
+   git push origin main
+   ```
+2. Ou **Deployments** → dernier déploiement **réussi** → menu **⋯** → **Redeploy** (sans sélectionner un commit Cursor).
+3. Ne pas mettre de guillemets dans les variables Vercel ; **Redeploy** après correction.
+
 CLI (optionnel) :
 
 ```bash
