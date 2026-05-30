@@ -8,8 +8,9 @@ Stack cible validée pour Lambdata.
 lambdata_app/          ← racine Git (ce repo)
 ├── web/               ← Next.js PWA → Vercel (Root Directory: web)
 ├── api/               ← NestJS → Cloud Run / Railway (plus tard)
-└── vercel.json        ← aide CI (optionnel si Root = web dans le dashboard)
 ```
+
+> Pas de `vercel.json` à la racine : avec **Root Directory = `web`**, Vercel utilise les défauts Next.js (`npm install`, `npm run build`, sortie `.next`).
 
 ## 1. GitHub
 
@@ -25,7 +26,13 @@ git push -u origin main
 1. [vercel.com](https://vercel.com) → **Add New Project** → importer `speak-ia/lambdata_app`.
 2. **Root Directory** : `web`
 3. Framework : Next.js (auto-détecté)
-4. Variables d’environnement (Preview + Production) :
+4. **Build and Output Settings** : laisser les **valeurs par défaut** (toggles désactivés) :
+   - Install : `npm install`
+   - Build : `npm run build`
+   - Output : *(vide — Next.js gère `.next` automatiquement)*
+   
+   Ne pas utiliser `--prefix web` ni `web/.next` si la racine est déjà `web`.
+5. Variables d’environnement (Preview + Production) :
 
 | Variable | Exemple |
 |----------|---------|
