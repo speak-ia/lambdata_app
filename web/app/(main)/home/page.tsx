@@ -6,6 +6,7 @@ import { GreetingCard } from "@/components/home/greeting-card";
 import { LevelProgress } from "@/components/home/level-progress";
 import { StatsRow } from "@/components/home/stats-row";
 import { TaskGrid } from "@/components/home/task-grid";
+import { DailyMissions } from "@/components/home/daily-missions";
 import { Badge } from "@/components/ui/badge";
 import { useAuthStore } from "@/store/auth-store";
 
@@ -30,6 +31,7 @@ export default function HomePage() {
       )}
       <LevelProgress />
       <StatsRow />
+      <DailyMissions />
       <section>
         <h2 className="mb-3 font-heading text-lg font-semibold">
           Missions de contribution

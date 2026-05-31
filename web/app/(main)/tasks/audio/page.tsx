@@ -1,30 +1,38 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Mic, Square } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { TaskShell } from "@/components/tasks/task-shell";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { getAudioPhrasesForLanguages } from "@/lib/audio-phrases";
+import { getLanguageLabel, resolveContributionLanguages } from "@/lib/languages";
+import { recordAndSyncContribution } from "@/lib/record-contribution";
 import { queueUpload } from "@/offline/db";
 import { useAuthStore } from "@/store/auth-store";
 
-const PHRASES = [
-  "Les pluies du Sahel nourrissent nos récoltes.",
-  "Le marché de Dakar s'anime à l'aube.",
-  "Rainbow Sprinkles.",
-];
-
 export default function AudioTaskPage() {
-  const accessToken = useAuthStore((s) => s.accessToken);
+  const user = useAuthStore((s) => s.user);
+  const token = useAuthStore((s) => s.accessToken);
+  const userLanguages = useMemo(
+    () => resolveContributionLanguages(user?.languages ?? ["fr"]),
+    [user?.languages],
+  );
+  const phrases = useMemo(
+    () => getAudioPhrasesForLanguages(userLanguages),
+    [userLanguages],
+  );
+
   const [index, setIndex] = useState(0);
   const [recording, setRecording] = useState(false);
   const [blob, setBlob] = useState<Blob | null>(null);
   const mediaRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
 
-  const phrase = PHRASES[index % PHRASES.length];
+  const current = phrases[index % phrases.length];
 
   const startRecording = async () => {
     try {
@@ -55,16 +63,25 @@ export default function AudioTaskPage() {
       toast.error("Enregistrez d'abord votre voix");
       return;
     }
+
     await queueUpload({
       module: "audio",
       payload: {
-        phrase,
+        phrase: current.text,
+        language: current.lang,
         size: blob.size,
         type: blob.type,
-        token: accessToken ?? undefined,
+        token: token ?? undefined,
       },
     });
-    toast.success("Enregistrement sauvegardé (sync auto)");
+
+    await recordAndSyncContribution("audio", token, {
+      phrase: current.text,
+      language: current.lang,
+      size: blob.size,
+    });
+
+    toast.success(`+75 XP · ${getLanguageLabel(current.lang)}`);
     setBlob(null);
     setIndex((i) => i + 1);
   };
@@ -76,14 +93,17 @@ export default function AudioTaskPage() {
       onPrevious={index > 0 ? () => setIndex((i) => i - 1) : undefined}
       className="pattern-waves"
     >
-      <p className="mb-6 text-center text-muted-foreground">
+      <p className="mb-2 text-center text-sm text-muted-foreground">
         Lisez le texte à voix haute
+      </p>
+      <p className="mb-6 text-center text-xs text-primary">
+        Langue : {getLanguageLabel(current.lang)}
       </p>
 
       <Card className="mx-auto w-full max-w-sm border-0 shadow-lg">
         <CardContent className="flex min-h-[200px] flex-col items-center justify-center gap-6 p-8">
           <p className="text-center font-heading text-2xl font-bold leading-snug">
-            {phrase}
+            {current.text}
           </p>
 
           <motion.div whileTap={{ scale: 0.95 }}>
@@ -106,13 +126,17 @@ export default function AudioTaskPage() {
               <Button variant="outline" size="sm" onClick={() => setBlob(null)}>
                 Supprimer
               </Button>
-              <Button size="sm" onClick={submit}>
+              <Button size="sm" onClick={() => void submit()}>
                 Envoyer
               </Button>
             </div>
           )}
         </CardContent>
       </Card>
+
+      <Label className="mt-4 block text-center text-xs text-muted-foreground">
+        Phrase {index + 1} / {phrases.length} · sync hors ligne si besoin
+      </Label>
     </TaskShell>
   );
 }

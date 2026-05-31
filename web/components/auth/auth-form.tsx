@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { LambdataLogo } from "@/components/branding/lambdata-logo";
 import { useAuthStore } from "@/store/auth-store";
 import { APP_TAGLINE } from "@/lib/constants";
+import { getPostAuthPath } from "@/lib/user-profile";
 import { isFirebaseConfigured } from "@/lib/firebase/config";
 import {
   getAuthErrorMessage,
@@ -56,8 +57,12 @@ export function AuthForm({ mode }: AuthFormProps) {
           : await registerWithEmail(email, password, name);
       setUser(result.user);
       setTokens(result.token);
-      toast.success(mode === "login" ? "Connexion réussie" : "Compte créé");
-      router.push("/home");
+      if (mode === "login") {
+        toast.success("Connexion réussie");
+      } else {
+        toast.success("Compte créé — complétez votre profil");
+      }
+      router.push(getPostAuthPath(result.user));
     } catch (error) {
       toast.error(getAuthErrorMessage(error));
     } finally {
@@ -76,7 +81,7 @@ export function AuthForm({ mode }: AuthFormProps) {
       setUser(result.user);
       setTokens(result.token);
       toast.success("Connexion Google réussie");
-      router.push("/home");
+      router.push(getPostAuthPath(result.user));
     } catch (error) {
       toast.error(getAuthErrorMessage(error));
     } finally {
@@ -162,7 +167,7 @@ export function AuthForm({ mode }: AuthFormProps) {
             ? "Chargement…"
             : mode === "login"
               ? "Se connecter"
-              : "Créer un compte"}
+              : "Créer mon compte"}
         </Button>
       </form>
 

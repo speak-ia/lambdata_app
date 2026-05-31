@@ -20,7 +20,27 @@ export function FirebaseAuthSync() {
 
       if (firebaseUser) {
         const token = await firebaseUser.getIdToken();
-        setUser(mapFirebaseUser(firebaseUser));
+        const mapped = mapFirebaseUser(firebaseUser);
+        const existing = useAuthStore.getState().user;
+        if (existing?.id === mapped.id && !existing.isGuest) {
+          setUser({
+            ...mapped,
+            country: existing.country,
+            ethnicity: existing.ethnicity,
+            languages: existing.languages,
+            profileCompleted: existing.profileCompleted,
+            level: existing.level,
+            xp: existing.xp,
+            xpToNextLevel: existing.xpToNextLevel,
+            agreements: existing.agreements,
+            contributions: existing.contributions,
+            streak: existing.streak,
+            lastActiveDate: existing.lastActiveDate,
+            badges: existing.badges,
+          });
+        } else {
+          setUser(mapped);
+        }
         setTokens(token);
         return;
       }

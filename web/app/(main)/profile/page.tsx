@@ -8,8 +8,13 @@ import { AppHeader } from "@/components/layout/app-header";
 import { useAuthStore } from "@/store/auth-store";
 import { signOutFirebase } from "@/lib/firebase/auth";
 import { isFirebaseConfigured } from "@/lib/firebase/config";
-import { AFRICAN_COUNTRIES, AFRICAN_LANGUAGES } from "@/lib/constants";
-import { LogOut, Moon, Sun } from "lucide-react";
+import {
+  AFRICAN_COUNTRIES,
+  AFRICAN_ETHNICITIES,
+  AFRICAN_LANGUAGES,
+} from "@/lib/constants";
+import { LogOut, Moon, Settings, Sun } from "lucide-react";
+import Link from "next/link";
 import { useAppStore } from "@/store/app-store";
 
 export default function ProfilePage() {
@@ -19,10 +24,11 @@ export default function ProfilePage() {
   const { theme, setTheme } = useAppStore();
 
   const country = AFRICAN_COUNTRIES.find((c) => c.code === user?.country);
+  const ethnicity = AFRICAN_ETHNICITIES.find((e) => e.code === user?.ethnicity);
 
   return (
     <div className="flex flex-col gap-6 pb-4">
-      <AppHeader showLogo={false} title="Profil" />
+      <AppHeader showLogo={false} title="Profil" showSettings={false} />
       <div className="flex flex-col items-center gap-3">
         <Avatar className="size-24">
           {user?.avatarUrl && <AvatarImage src={user.avatarUrl} alt="" />}
@@ -31,8 +37,9 @@ export default function ProfilePage() {
           </AvatarFallback>
         </Avatar>
         <h1 className="font-heading text-xl font-bold">{user?.displayName}</h1>
-        <p className="text-muted-foreground">
-          {country?.flag} {country?.label ?? user?.country} · Niveau {user?.level}
+        <p className="text-center text-muted-foreground">
+          {country?.flag} {country?.label ?? user?.country}
+          {ethnicity ? ` · ${ethnicity.label}` : ""} · Niveau {user?.level}
         </p>
         {user?.isGuest && (
           <p className="text-sm text-sand-foreground">Mode invité</p>
@@ -41,7 +48,7 @@ export default function ProfilePage() {
 
       <Card>
         <CardContent className="flex flex-col gap-3 p-5">
-          <p className="text-sm font-medium">Langues parlées</p>
+          <p className="text-sm font-medium">Langues de contribution</p>
           <div className="flex flex-wrap gap-2">
             {user?.languages.map((code) => {
               const lang = AFRICAN_LANGUAGES.find((l) => l.code === code);
@@ -57,6 +64,14 @@ export default function ProfilePage() {
           </div>
         </CardContent>
       </Card>
+
+      <Link
+        href="/settings"
+        className="inline-flex h-12 w-full items-center justify-between rounded-xl border border-input bg-background px-4 text-sm font-medium hover:bg-muted/50"
+      >
+        Paramètres
+        <Settings className="size-4" />
+      </Link>
 
       <Button
         variant="outline"

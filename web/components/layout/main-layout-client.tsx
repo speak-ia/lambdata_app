@@ -10,7 +10,9 @@ export function MainLayoutClient({
 }) {
   const pathname = usePathname();
   const hideNav =
-    pathname.startsWith("/tasks") || pathname === "/profile";
+    pathname.startsWith("/tasks") ||
+    pathname === "/profile" ||
+    pathname === "/settings";
 
   return <MobileShell hideNav={hideNav}>{children}</MobileShell>;
 }

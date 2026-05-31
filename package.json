@@ -5,7 +5,9 @@
   "description": "Infrastructure africaine souveraine de collecte de données IA",
   "scripts": {
     "dev": "concurrently \"npm run dev:web\" \"npm run dev:api\"",
+    "dev:clean": "npm run clean --prefix web && npm run dev",
     "dev:web": "npm run dev --prefix web",
+    "dev:web:turbo": "npm run dev:turbo --prefix web",
     "dev:api": "npm run start:dev --prefix api",
     "build": "npm run build --prefix web && npm run build --prefix api",
     "db:generate": "npm run prisma:generate --prefix api",

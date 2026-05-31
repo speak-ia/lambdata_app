@@ -9,6 +9,7 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   setUser: (user: UserProfile | null) => void;
+  updateUser: (patch: Partial<UserProfile>) => void;
   setTokens: (access: string | null, refresh?: string | null) => void;
   loginAsGuest: () => void;
   logout: () => void;
@@ -19,7 +20,9 @@ const GUEST_USER: UserProfile = {
   id: "guest",
   displayName: "Contributeur invité",
   country: "SN",
+  ethnicity: "other",
   languages: ["fr"],
+  profileCompleted: true,
   level: 1,
   xp: 0,
   xpToNextLevel: 10000,
@@ -43,6 +46,10 @@ export const useAuthStore = create<AuthState>()(
           user,
           isAuthenticated: !!user && !user.isGuest,
         }),
+      updateUser: (patch) =>
+        set((state) => ({
+          user: state.user ? { ...state.user, ...patch } : null,
+        })),
       setTokens: (access, refresh) =>
         set({
           accessToken: access,
@@ -66,6 +73,21 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: "lambdata-auth",
+      version: 1,
+      migrate: (persisted) => {
+        const state = persisted as {
+          user?: UserProfile;
+        };
+        if (state?.user && !state.user.isGuest) {
+          state.user = {
+            ...state.user,
+            ethnicity: state.user.ethnicity ?? "",
+            profileCompleted: state.user.profileCompleted ?? false,
+            languages: state.user.languages ?? [],
+          };
+        }
+        return persisted;
+      },
       partialize: (state) => ({
         user: state.user,
         accessToken: state.accessToken,

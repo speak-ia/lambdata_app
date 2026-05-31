@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { LambdataLogo } from "@/components/branding/lambdata-logo";
 import { useAuthStore } from "@/store/auth-store";
+import { getPostAuthPath } from "@/lib/user-profile";
 import { motion } from "framer-motion";
 
 export default function SplashPage() {
@@ -13,7 +14,7 @@ export default function SplashPage() {
   useEffect(() => {
     const t = setTimeout(() => {
       if (user) {
-        router.replace("/home");
+        router.replace(getPostAuthPath(user));
       } else {
         router.replace("/login");
       }

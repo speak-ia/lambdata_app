@@ -8,6 +8,8 @@ export type ContributionModule =
   | "validation"
   | "text";
 
+export type AppLanguage = "fr" | "en" | "ar" | "pt" | "sw";
+
 export interface UserProfile {
   id: string;
   email?: string;
@@ -15,7 +17,9 @@ export interface UserProfile {
   displayName: string;
   avatarUrl?: string;
   country: string;
+  ethnicity: string;
   languages: string[];
+  profileCompleted: boolean;
   level: number;
   xp: number;
   xpToNextLevel: number;
@@ -23,6 +27,7 @@ export interface UserProfile {
   contributions: number;
   badges: Badge[];
   streak: number;
+  lastActiveDate?: string;
   isGuest: boolean;
 }
 
